@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RecoverAI — Agentic Payment Recovery Copilot</title>
+<style>
+  :root {
+    --ink: #16202c;
+    --ink-deep: #0e1b2b;
+    --paper: #f7f5f0;
+    --paper-raised: #fffdf8;
+    --hairline: #ddd6c8;
+    --green: #1f7a5c;
+    --green-bg: #e4f0e9;
+    --amber: #b8672d;
+    --amber-bg: #f6e9dd;
+    --red: #9c3b32;
+    --red-bg: #f5e5e2;
+    --muted: #6b7280;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+    --sans: -apple-system, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+  }
+  a { color: inherit; }
+
+  /* ---------- header ---------- */
+  header {
+    background: var(--ink-deep);
+    color: #eef1f4;
+    padding: 22px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  header .title h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header .title p {
+    margin: 5px 0 0;
+    font-size: 13px;
+    color: #a9b4c0;
+    max-width: 56ch;
+    line-height: 1.5;
+  }
+  header .credit {
+    text-align: right;
+    font-size: 12.5px;
+    color: #a9b4c0;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  header .credit a { text-decoration: underline; text-decoration-color: #445064; }
+  header .credit a:hover { text-decoration-color: #eef1f4; }
+  header .credit .name { color: #eef1f4; font-weight: 600; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 60px; }
+
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+
+  /* ---------- pipeline strip ---------- */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 30px;
+    border: 1px solid var(--hairline);
+    background: var(--paper-raised);
+  }
+  .pipeline .step {
+    flex: 1;
+    padding: 14px 16px;
+    position: relative;
+    border-right: 1px solid var(--hairline);
+    transition: background 0.4s ease;
+  }
+  .pipeline .step:last-child { border-right: none; }
+  .pipeline .step .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pipeline .step .label {
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-top: 3px;
+  }
+  .pipeline .step .role {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .pipeline .step.active { background: var(--green-bg); }
+  .pipeline .step.active .n { color: var(--green); }
+
+  /* ---------- ledger totals strip ---------- */
+  .ledger {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: 30px;
+  }
+  .ledger-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 11px 2px;
+    border-bottom: 1px dashed var(--hairline);
+  }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-row .label { font-size: 13px; color: var(--muted); }
+  .ledger-row .value {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .ledger-row .value.green { color: var(--green); }
+  .ledger-row .value.amber { color: var(--amber); }
+
+  .actions { margin-bottom: 30px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    background: var(--ink-deep);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .btn:hover { background: #1c2c42; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .run-note { font-size: 12.5px; color: var(--muted); }
+
+  .columns { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; margin-bottom: 30px; }
+  @media (max-width: 860px) { .columns { grid-template-columns: 1fr; } }
+
+  .panel { border: 1px solid var(--hairline); background: var(--paper-raised); padding: 18px 20px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--hairline); }
+  th { color: var(--muted); font-weight: 600; font-size: 11.5px; }
+  td.num, th.num { text-align: right; font-family: var(--mono); }
+  .guardrail-line {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--hairline);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .guardrail-line b { color: var(--amber); font-family: var(--mono); }
+
+  /* ---------- charts (hand-rolled, no external libs) ---------- */
+  .bar-row { display: grid; grid-template-columns: 118px 1fr 64px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .bar-row .rlabel { font-size: 12px; color: var(--muted); }
+  .bar-track { background: #eee9dc; height: 9px; }
+  .bar-fill { background: var(--green); height: 9px; }
+  .bar-row .ramt { font-family: var(--mono); font-size: 11.5px; text-align: right; }
+
+  #sparkline { display: block; margin-top: 6px; }
+
+  /* ---------- live trace (receipt tickets) ---------- */
+  .trace-item {
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-top: 2px dashed var(--hairline);
+    padding: 12px 16px;
+    margin-bottom: 10px;
+  }
+  .trace-item .row1 { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .trace-item .txn { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .trace-item .amt { font-family: var(--mono); color: var(--muted); font-size: 12.5px; }
+  .tag { display: inline-block; padding: 2px 9px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em; }
+  .tag.recovered { background: var(--green-bg); color: var(--green); }
+  .tag.lost { background: var(--red-bg); color: var(--red); }
+  .tag.held { background: var(--amber-bg); color: var(--amber); }
+  .trace-item .line { font-size: 12.5px; color: #384454; margin-top: 7px; line-height: 1.5; }
+  .trace-item .agent { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-right: 6px; }
+
+  .empty-state { font-size: 13px; color: var(--muted); padding: 10px 2px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 26px 20px 40px; }
+  footer a { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <h1>RecoverAI — Agentic Payment Recovery Copilot</h1>
+    <p>Track 3: AI Revenue Recovery. A four-agent pipeline that diagnoses why a payment failed, decides how to win it back, checks the decision against fraud risk, and only then messages the customer.</p>
+  </div>
+  <div class="credit">
+    Built by <span class="name">Sujal Singhal</span><br />
+    <a href="https://github.com/SujalSinghal123" target="_blank" rel="noopener">github.com/SujalSinghal123</a>
+  </div>
+</header>
+
+<main>
+
+  <div class="pipeline" id="pipeline">
+    <div class="step" data-step="diagnostician">
+      <div class="n">01</div>
+      <div class="label">Diagnostician</div>
+      <div class="role">Classifies why the payment failed</div>
+    </div>
+    <div class="step" data-step="strategist">
+      <div class="n">02</div>
+      <div class="label">Strategist</div>
+      <div class="role">Picks a recovery action via a learning bandit</div>
+    </div>
+    <div class="step" data-step="guardrail">
+      <div class="n">03</div>
+      <div class="label">Risk Guardrail</div>
+      <div class="role">Vetoes automated actions on high-risk transactions</div>
+    </div>
+    <div class="step" data-step="communicator">
+      <div class="n">04</div>
+      <div class="label">Communicator</div>
+      <div class="role">Writes the customer-facing message</div>
+    </div>
+  </div>
+
+  <div class="ledger" id="ledger">
+    <div class="ledger-row"><span class="label">Diagnostician accuracy (8-way classification)</span><span class="value" id="acc">–</span></div>
+    <div class="ledger-row"><span class="label">Transactions processed</span><span class="value" id="txn-count">–</span></div>
+    <div class="ledger-row"><span class="label">Recovery rate</span><span class="value green" id="recovery-rate">–</span></div>
+    <div class="ledger-row"><span class="label">Revenue recovered</span><span class="value green" id="revenue-recovered">–</span></div>
+    <div class="ledger-row"><span class="label">Held for manual review (guardrail)</span><span class="value amber" id="held-count">–</span></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="run-btn" onclick="runBatch()">Run new recovery batch — 300 transactions</button>
+    <span class="run-note" id="run-note">Trains once on load, then simulates a fresh batch on each click.</span>
+  </div>
+
+  <div class="columns">
+    <div class="panel">
+      <h2>What the Strategist has learned</h2>
+      <table id="policy-table">
+        <thead><tr><th>Reason</th><th>Segment</th><th>Best action</th><th class="num">Est. prob</th><th class="num">Samples</th></tr></thead>
+        <tbody><tr><td colspan="5" class="empty-state">Run a batch to populate the learned policy.</td></tr></tbody>
+      </table>
+      <div class="guardrail-line" id="guardrail-line">Guardrail: no reviews yet.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Recovered revenue by failure reason</h2>
+      <div id="reason-bars"><div class="empty-state">Run a batch to see the breakdown.</div></div>
+
+      <h2 style="margin-top:20px;">Recovery rate across runs</h2>
+      <svg id="sparkline" width="100%" height="70" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Live agent reasoning trace (last 10)</h2>
+    <div id="trace-container"><div class="empty-state">Click "Run new recovery batch" to watch all four agents reason through real transactions.</div></div>
+  </div>
+
+</main>
+
+<footer>
+  RecoverAI · synthetic data, demo mode · built solo by <a href="https://github.com/SujalSinghal123" target="_blank" rel="noopener">Sujal Singhal</a> for the Razorpay AI Builder Internship 2026
+</footer>
+
+<script>
+const runHistory = []; // recovery_rate per run, for the sparkline
+
+async function loadTrainMetrics() {
+  const res = await fetch('/api/train_metrics');
+  const data = await res.json();
+  document.getElementById('acc').innerText = (data.accuracy * 100).toFixed(1) + '%';
+}
+
+function pulsePipeline() {
+  const steps = document.querySelectorAll('#pipeline .step');
+  steps.forEach((el, i) => {
+    setTimeout(() => {
+      el.classList.add('active');
+      setTimeout(() => el.classList.remove('active'), 500);
+    }, i * 220);
+  });
+}
+
+function renderReasonBars(byReason) {
+  const container = document.getElementById('reason-bars');
+  const entries = Object.entries(byReason).sort((a, b) => b[1].recovered_amount_inr - a[1].recovered_amount_inr);
+  const max = Math.max(...entries.map(([, v]) => v.recovered_amount_inr), 1);
+  container.innerHTML = '';
+  entries.forEach(([reason, v]) => {
+    const pct = Math.max((v.recovered_amount_inr / max) * 100, 2);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="rlabel">${reason.replace(/_/g, ' ')}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="ramt">₹${v.recovered_amount_inr.toLocaleString('en-IN')}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderSparkline() {
+  const svg = document.getElementById('sparkline');
+  if (runHistory.length < 1) { svg.innerHTML = ''; return; }
+  const w = 300, h = 70, pad = 6;
+  const pts = runHistory.map((v, i) => {
+    const x = runHistory.length === 1 ? pad : pad + (i / (runHistory.length - 1)) * (w - pad * 2);
+    const y = h - pad - v * (h - pad * 2);
+    return [x, y];
+  });
+  const path = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const dots = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="#1f7a5c" />`).join('');
+  svg.innerHTML = `<path d="${path}" fill="none" stroke="#1f7a5c" stroke-width="1.8" />${dots}`;
+}
+
+async function runBatch() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  document.getElementById('run-note').innerText = 'Agents working through the batch…';
+  pulsePipeline();
+
+  const res = await fetch('/api/run');
+  const data = await res.json();
+  const s = data.summary;
+
+  document.getElementById('txn-count').innerText = s.transactions_processed;
+  document.getElementById('recovery-rate').innerText = (s.recovery_rate * 100).toFixed(1) + '%';
+  document.getElementById('revenue-recovered').innerText = '₹' + s.recovered_amount_inr.toLocaleString('en-IN');
+  document.getElementById('held-count').innerText = s.held_for_review_count + ' txns (₹' + s.held_for_review_amount_inr.toLocaleString('en-IN') + ')';
+
+  const gs = data.guardrail_stats;
+  document.getElementById('guardrail-line').innerHTML =
+    `Guardrail: <b>${gs.vetoes}</b> of <b>${gs.reviews}</b> proposed actions vetoed so far (${(gs.veto_rate * 100).toFixed(1)}%) and routed to a human agent instead of auto-messaging a high-risk transaction.`;
+
+  const tbody = document.querySelector('#policy-table tbody');
+  tbody.innerHTML = '';
+  data.top_policies.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.failure_reason.replace(/_/g,' ')}</td><td>${p.customer_segment.replace(/_/g,' ')}</td><td>${p.best_action.replace(/_/g,' ')}</td><td class="num">${(p.estimated_recovery_prob*100).toFixed(0)}%</td><td class="num">${p.samples}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  renderReasonBars(s.recovered_by_reason);
+  runHistory.push(s.recovery_rate);
+  renderSparkline();
+
+  const traceContainer = document.getElementById('trace-container');
+  traceContainer.innerHTML = '';
+  data.trace_sample.slice().reverse().forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'trace-item';
+    let tag;
+    if (t.held_for_review) tag = '<span class="tag held">HELD FOR REVIEW</span>';
+    else if (t.recovered) tag = '<span class="tag recovered">RECOVERED</span>';
+    else tag = '<span class="tag lost">NOT RECOVERED</span>';
+    div.innerHTML = `
+      <div class="row1">
+        <span class="txn">${t.txn_id}</span>
+        <span class="amt">₹${t.amount_inr}</span>
+        ${tag}
+      </div>
+      <div class="line"><span class="agent">Diagnostician</span>${t.diagnosis.reasoning}</div>
+      <div class="line"><span class="agent">Strategist</span>${t.decision.reasoning}</div>
+      <div class="line"><span class="agent">Guardrail</span>${t.guardrail.reasoning}</div>
+      <div class="line"><span class="agent">Communicator</span>[${t.message.channel}] ${t.message.body}</div>
+    `;
+    traceContainer.appendChild(div);
+  });
+
+  document.getElementById('run-note').innerText = 'Trains once on load, then simulates a fresh batch on each click.';
+  btn.disabled = false;
+}
+
+loadTrainMetrics();
+</script>
+
+</body>
+</html>
