@@ -1,11 +1,11 @@
 # 💡 RecoverAI — Agentic Payment Recovery Copilot
 
-**Razorpay AI Builder Internship 2026 — Track 3: AI Revenue Recovery**
-*(architecture also extends into Track 2: AI Risk Manager, via the Risk Guardrail Agent below)*
+**AI Revenue Recovery**
+*(architecture also extends into AI Risk Manager, via the Risk Guardrail Agent below)*
 
 > Every payment gateway loses a meaningful slice of GMV to **failed transactions** — timeouts, expired OTPs, insufficient funds, risk-engine false positives. Most of that money is *recoverable* if you react to the right failure with the right action, fast. RecoverAI is a self-improving, explainable multi-agent system that diagnoses *why* a payment failed, decides *how* to win it back, checks that decision against fraud risk, and *learns* which recovery strategy works best for which customer — autonomously, transaction by transaction.
 
-Built solo by **[Sujal Singhal](https://github.com/SujalSinghal123)** for the Razorpay AI Builder Internship 2026 application.
+Built solo by **[Sujal Singhal](https://github.com/SujalSinghal123)** 
 
 ---
 
@@ -162,5 +162,5 @@ Set `ANTHROPIC_API_KEY` in your environment before launching the dashboard, and 
 
 ---
 
-*Built solo by [Sujal Singhal](https://github.com/SujalSinghal123) for the Razorpay AI Builder Internship 2026 application.*
+*Built solo by [Sujal Singhal](https://github.com/SujalSinghal123) *
 
