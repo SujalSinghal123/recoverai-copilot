@@ -77,6 +77,14 @@ A single-page, zero-build-step dashboard (Flask + vanilla HTML/CSS/JS) shows:
 - Recovered revenue by failure reason, and a recovery-rate trend across runs.
 - A live reasoning trace: every agent's decision and *why*, per transaction, styled as a receipt/ledger feed — so the whole pipeline is auditable end to end.
 
+### Screenshots
+
+![Dashboard overview](screenshots/dashboard-overview.png)
+
+![Live agent reasoning trace](screenshots/live-trace.png)
+
+![Guardrail veto detail](screenshots/guardrail-detail.png)
+
 
 ### Screenshots
 
