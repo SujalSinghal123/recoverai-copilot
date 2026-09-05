@@ -86,12 +86,6 @@ A single-page, zero-build-step dashboard (Flask + vanilla HTML/CSS/JS) shows:
 ![Guardrail veto detail](screenshots/guardrail-detail.png)
 
 
-### Screenshots
-
-![Dashboard overview](screenshots/dashboard-overview.png)
-![Live agent reasoning trace](screenshots/live-trace.png)
-![Guardrail detail](screenshots/guardrail-detail.png)
-
 ## 🏗️ Repository Structure
 
 ```
